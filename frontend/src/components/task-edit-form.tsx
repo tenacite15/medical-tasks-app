@@ -134,7 +134,7 @@ export function TaskEditForm({ task, onSave, onCancel }: TaskEditFormProps) {
         </div>
 
         <DialogFooter>
-          <Button type="button" variant="ghost" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onCancel}>
             Annuler
           </Button>
           <Button type="submit">Enregistrer</Button>

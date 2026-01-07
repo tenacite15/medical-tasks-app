@@ -6,9 +6,10 @@ import { Button } from "./components/ui/button"
 import type { MedicalTask } from "./types/medical-task"
 import { api, type PaginationInfo } from "./services/api"
 import voccaLogo from "./assets/vocca-logo.avif"
-import { BarChart3 } from "lucide-react"
-import { Routes, Route, useNavigate } from "react-router-dom"
+import { BarChart3, Users } from "lucide-react"
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom"
 import { StatisticsPage } from "./pages/statistics-page"
+import { AITaskCreator } from "./components/ai-task-creator"
 
 function App() {
   const [tasks, setTasks] = useState<MedicalTask[]>([])
@@ -17,6 +18,8 @@ function App() {
   const [pagination, setPagination] = useState<PaginationInfo | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const navigate = useNavigate()
+  const location = useLocation()
+  const isStatsPage = location.pathname === "/statistics"
 
   const loadTasks = async (page: number = currentPage) => {
     try {
@@ -87,13 +90,18 @@ function App() {
               </p>
             </div>
               <div className="flex items-center gap-2">
+                <AITaskCreator onCreated={() => loadTasks(1)} />
                 <Button
                   variant="outline"
-                  onClick={() => navigate("/statistics")}
-                  title="Mes statistiques"
+                  onClick={() => navigate(isStatsPage ? "/" : "/statistics")}
+                  title={isStatsPage ? "Mes patients" : "Mes statistiques"}
                 >
-                  <BarChart3 className="mr-2 h-4 w-4" />
-                  Mes statistiques
+                  {isStatsPage ? (
+                    <Users className="mr-2 h-4 w-4" />
+                  ) : (
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                  )}
+                  {isStatsPage ? "Mes patients" : "Mes statistiques"}
                 </Button>
               </div>
           </div>
@@ -104,8 +112,6 @@ function App() {
               path="/"
               element={
                 <>
-                  {/* (Les statistiques sont maintenant sur une page dédiée) */}
-
                   <div className="bg-white rounded-lg shadow-sm p-4 border border-slate-200">
                     <SearchBar
                       value={searchQuery}

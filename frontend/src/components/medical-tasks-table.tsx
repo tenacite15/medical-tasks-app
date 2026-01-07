@@ -59,7 +59,7 @@ export function MedicalTasksTable({ tasks, onUpdateTask, onDeleteTask, globalFil
   const [internalGlobalFilter, setInternalGlobalFilter] = useState(globalFilter)
 
   useEffect(() => {
-    setInternalGlobalFilter(globalFilter)
+    setInternalGlobalFilter(globalFilter ?? "")
   }, [globalFilter])
 
   const columns = useMemo<ColumnDef<MedicalTask>[]>(
@@ -344,26 +344,29 @@ export function MedicalTasksTable({ tasks, onUpdateTask, onDeleteTask, globalFil
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     globalFilterFn: (row, _columnId, filterValue) => {
-      if (!filterValue) return true
+      const fv = filterValue ?? ""
+      const searchValue = String(fv).toLowerCase()
 
-      const searchValue = String(filterValue).toLowerCase()
+      if (!searchValue) return true
 
-      if (row.original.title.toLowerCase().includes(searchValue)) return true
+      const safe = (s?: string) => (s ?? "").toLowerCase()
 
-      const patientName = `${row.original.patient.firstName} ${row.original.patient.lastName}`.toLowerCase()
+      if (safe(row.original.title).includes(searchValue)) return true
+
+      const patientName = `${row.original.patient?.firstName ?? ""} ${row.original.patient?.lastName ?? ""}`.toLowerCase()
       if (patientName.includes(searchValue)) return true
 
-      if (row.original.patient.roomNumber.toLowerCase().includes(searchValue)) return true
+      if (safe(row.original.patient?.roomNumber).includes(searchValue)) return true
 
-      if (row.original.assignedTo.name.toLowerCase().includes(searchValue)) return true
+      if (safe(row.original.assignedTo?.name).includes(searchValue)) return true
 
-      if (row.original.description.toLowerCase().includes(searchValue)) return true
+      if (safe(row.original.description).includes(searchValue)) return true
 
-      if (categoryLabels[row.original.category]?.toLowerCase().includes(searchValue)) return true
+      if (safe(categoryLabels[row.original.category]).includes(searchValue)) return true
 
-      if (statusLabels[row.original.status]?.toLowerCase().includes(searchValue)) return true
+      if (safe(statusLabels[row.original.status]).includes(searchValue)) return true
 
-      if (priorityLabels[row.original.priority]?.toLowerCase().includes(searchValue)) return true
+      if (safe(priorityLabels[row.original.priority]).includes(searchValue)) return true
 
       return false
     },

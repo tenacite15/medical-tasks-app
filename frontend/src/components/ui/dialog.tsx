@@ -39,5 +39,6 @@ export function DialogDescription({ children }: { children: React.ReactNode }) {
 }
 
 export function DialogFooter({ children }: { children: React.ReactNode }) {
-  return <div className="flex justify-end gap-2 mt-6">{children}</div>
+  // Add horizontal and bottom padding so buttons don't stick to the modal border
+  return <div className="flex justify-end gap-2 mt-4 px-6 pb-6">{children}</div>
 }
