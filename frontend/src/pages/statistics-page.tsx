@@ -13,11 +13,6 @@ export function StatisticsPage({ tasks }: StatisticsPageProps) {
   return (
     <div className="space-y-4">
       <div className="bg-white rounded-lg shadow-sm p-4 border border-slate-200">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Mes statistiques</h2>
-          <Button variant="ghost" onClick={() => navigate(-1)}>Retour</Button>
-        </div>
-
         <Statistics tasks={tasks} />
       </div>
     </div>

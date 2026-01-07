@@ -55,4 +55,17 @@ export const api = {
     });
     if (!response.ok) throw new Error("Erreur lors de la suppression de la tâche");
   },
+
+  aiSummarize: async (text: string): Promise<{ summary: string | null }> => {
+    const response = await fetch(`${API_BASE_URL}/ai/summarize`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    })
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}))
+      throw new Error(body?.error || "Erreur lors de l'appel AI")
+    }
+    return response.json()
+  },
 };

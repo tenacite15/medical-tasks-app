@@ -2,6 +2,8 @@ import { useState } from "react"
 import type { MedicalTask, Priority, Status } from "../types/medical-task"
 import { Button } from "./ui/button"
 import { DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./ui/dialog"
+import { api } from "../services/api"
+import { useEffect } from "react"
 
 interface TaskEditFormProps {
   task: MedicalTask
@@ -30,6 +32,13 @@ export function TaskEditForm({ task, onSave, onCancel }: TaskEditFormProps) {
     status: task.status,
     notes: task.notes || "",
   })
+  const [aiSummary, setAiSummary] = useState<string | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+
+  useEffect(() => {
+    // clear AI summary when description changes
+    setAiSummary(null)
+  }, [formData.description])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -70,6 +79,44 @@ export function TaskEditForm({ task, onSave, onCancel }: TaskEditFormProps) {
               className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
               required
             />
+            <div className="flex items-center gap-2 mt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    setAiLoading(true)
+                    const res = await api.aiSummarize(formData.description)
+                    setAiSummary(res.summary)
+                  } catch (err) {
+                    console.error(err)
+                    alert("Erreur lors de la génération du résumé IA")
+                  } finally {
+                    setAiLoading(false)
+                  }
+                }}
+              >
+                Résumé IA
+              </Button>
+              {aiLoading && <div className="text-sm text-slate-500">Génération...</div>}
+            </div>
+
+            {aiSummary && (
+              <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-md">
+                <div className="text-sm text-slate-700 mb-2">Résumé proposé :</div>
+                <div className="text-sm text-slate-900 mb-3">{aiSummary}</div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setFormData({ ...formData, notes: (formData.notes || "") + (formData.notes ? "\n" : "") + aiSummary })}
+                  >
+                    Insérer dans les notes
+                  </Button>
+                  <Button type="button" variant="ghost" onClick={() => setAiSummary(null)}>Fermer</Button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

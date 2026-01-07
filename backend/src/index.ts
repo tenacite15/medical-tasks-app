@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import { readFileSync } from 'fs';
+import dotenv from 'dotenv';
+import fetch from 'node-fetch'
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import type { MedicalTask } from './types.js';
@@ -10,6 +12,8 @@ const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+dotenv.config();
 
 app.use(cors());
 app.use(express.json());
@@ -99,6 +103,47 @@ app.delete('/api/tasks/:id', (req, res) => {
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', tasks: tasks.length });
 });
+
+app.post('/api/ai/summarize', async (req, res) => {
+  const text = req.body?.text;
+  if (!text) return res.status(400).json({ error: 'Missing text in body' });
+
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    return res.status(501).json({ error: 'AI service not configured on server (OPENAI_API_KEY missing)' });
+  }
+
+  try {
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          { role: 'system', content: "Tu es un assistant utile qui résume en français le contenu médical de manière concise (1-2 phrases). Ne pas inventer d'informations." },
+          { role: 'user', content: `Fais un résumé court de ce texte : ${text}` }
+        ],
+        temperature: 0.2,
+        max_tokens: 150,
+      })
+    })
+
+    if (!resp.ok) {
+      const txt = await resp.text()
+      return res.status(500).json({ error: 'AI provider error', detail: txt })
+    }
+
+    const body = await resp.json()
+    const summary = body?.choices?.[0]?.message?.content ?? null
+    return res.json({ summary })
+  } catch (err) {
+    console.error('AI summarize error', err)
+    return res.status(500).json({ error: 'Internal error calling AI provider' })
+  }
+})
 
 app.listen(PORT, () => {
   console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
